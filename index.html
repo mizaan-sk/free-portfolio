@@ -1139,29 +1139,110 @@ Development of modern, responsive, and high-performance apps for iOS and Android
           </figure>
         </section> -->
 
-        <section class="contact-form">
+      <section class="contact-form">
+  <h3 class="h3 form-title">Contact Form</h3>
 
-          <h3 class="h3 form-title">Contact Form</h3>
+  <form action="#" class="form" data-form id="contactForm">
+    <div class="input-wrapper">
+      <input type="text" name="fullname" class="form-input"
+             placeholder="Full name" required data-form-input>
 
-          <form action="#" class="form" data-form>
+      <input type="email" name="email" class="form-input"
+             placeholder="Email address" required data-form-input>
+    </div>
 
-            <div class="input-wrapper">
-              <input type="text" name="fullname" class="form-input" placeholder="Full name" required data-form-input>
+    <input type="tel" name="phone"   style="margin-bottom:30px !important;" class="form-input"
+           placeholder="Phone number (e.g. +91 98765 43210)"
+           pattern="[+0-9\s\-()]{7,15}"
+           required data-form-input>
 
-              <input type="email" name="email" class="form-input" placeholder="Email address" required data-form-input>
-            </div>
 
-            <textarea name="message" class="form-input" placeholder="Your Message" required data-form-input></textarea>
+    <!-- ✅ Form Source -->
+  <input type="hidden" name="source" value="Freelance">
 
-            <button class="form-btn" type="submit" disabled data-form-btn>
-              <ion-icon name="paper-plane"></ion-icon>
-              <span>Send Message</span>
-            </button>
+    <textarea name="message" class="form-input"
+              placeholder="Your Message" required data-form-input></textarea>
 
-          </form>
+    <button class="form-btn" type="submit" disabled data-form-btn>
+      <ion-icon name="paper-plane"></ion-icon>
+      <span>Send Message</span>
+    </button>
 
-        </section>
+    <p id="form-status" style="margin-top: 10px; font-size: 14px;"></p>
+  </form>
+</section>
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
 
+    const GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycby8BXjX-AEvgaMqP5dmFV5vYjFUz8T4nwG6KkqAFcGurv0tIU18FhmqnTVESAhIFyms/exec";
+
+    function initContactForm() {
+      const form = document.getElementById("contactForm");
+      if (!form || form.dataset.initialized) return;
+      form.dataset.initialized = "true";
+
+      const inputs = form.querySelectorAll("[data-form-input]");
+      const submitBtn = form.querySelector("[data-form-btn]");
+      const statusMsg = document.getElementById("form-status");
+
+      const checkAllFilled = () => {
+        const allFilled = [...inputs].every(i => i.value.trim() !== "");
+        submitBtn.disabled = !allFilled;
+      };
+
+      inputs.forEach(input => {
+        input.addEventListener("input", checkAllFilled);
+        input.addEventListener("change", checkAllFilled); // for dropdowns
+      });
+
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        submitBtn.disabled = true;
+        submitBtn.querySelector("span").textContent = "Sending...";
+        statusMsg.textContent = "";
+
+        const payload = {
+          fullname: form.fullname.value.trim(),
+          email: form.email.value.trim(),
+          phone: form.phone.value.trim(),
+          source: form.source.value,       // ✅ added
+          message: form.message.value.trim()
+        };
+
+        try {
+          await fetch(GOOGLE_SHEET_URL, {
+            method: "POST",
+            headers: { "Content-Type": "text/plain" },
+            body: JSON.stringify(payload),
+            mode: "no-cors"
+          });
+
+          statusMsg.style.color = "green";
+          statusMsg.textContent = "✅ Message sent successfully!";
+          form.reset();
+          submitBtn.disabled = true;
+          submitBtn.querySelector("span").textContent = "Send Message";
+
+        } catch (err) {
+          statusMsg.style.color = "red";
+          statusMsg.textContent = "❌ Something went wrong. Please try again.";
+          submitBtn.disabled = false;
+          submitBtn.querySelector("span").textContent = "Send Message";
+        }
+      });
+    }
+
+    initContactForm();
+
+    document.querySelectorAll("[data-nav-link]").forEach(link => {
+      link.addEventListener("click", () => {
+        setTimeout(initContactForm, 100);
+      });
+    });
+
+  });
+</script>
       </article>
 
     </div>
